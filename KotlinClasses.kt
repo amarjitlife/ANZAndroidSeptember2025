@@ -412,6 +412,55 @@ class Human {
 
 //_____________________________________________________________
 
+var title = "Ms."
+
+// class Client1( val name: String, var postalCode: Int ) {
+class Client1( val name: String, val postalCode: Int ) {
+	val fullname = title + name
+	override fun toString() = "Client1(name=$name, postalCode=$postalCode)"
+
+	override fun equals( other: Any? ) : Boolean {
+		if ( other == null || other !is Client1 ) return false
+		return name == other.name && postalCode == other.postalCode
+	}
+
+	// Best Practice
+	// Similary Implement hashCode Method for equal
+}
+
+// Data Classes
+//		For Classes Compiler Will Generate Following Functions
+//		1. toString() Method Code
+//		2. equals() Method Code
+//		3. hashCode() Method Code
+//		4. It Generates Component Methods For Each Property
+//		5. copy Method Code
+
+data class Client2( val name: String, val postalCode: Int )
+
+fun playWithClients() {
+	val gabbar1 = Client1( name = "Gabbar Singh", postalCode = 111111 )	
+	val gabbar2 = Client1( name = "Gabbar Singh", postalCode = 111111 )
+
+	println( gabbar1 ) // gabbar.toString()
+	println( gabbar2 ) // gabbar.toString()
+
+	println( gabbar1 == gabbar2 )
+
+	val gabbar11 = Client2( name = "Gabbar Singh", postalCode = 111111 )	
+	val gabbar22 = Client2( name = "Gabbar Singh", postalCode = 111111 )
+
+	println( gabbar11 ) // gabbar.toString()
+	println( gabbar22 ) // gabbar.toString()
+
+	println( gabbar11 == gabbar22 )
+
+	println( gabbar22.component1() )
+	println( gabbar22.component2() )
+	println( gabbar22.component3() )
+}
+
+//_____________________________________________________________
 
 //_____________________________________________________________
 //_____________________________________________________________
@@ -453,6 +502,12 @@ fun main() {
 	println("\nFunction: playWithCompanionObjectsAgain")	
 	playWithCompanionObjectsAgain()
 
+	println("\nFunction: playWithClients")
+	playWithClients()
+
+	// println("\nFunction: ")	
+	// println("\nFunction: ")	
+	// println("\nFunction: ")	
 	// println("\nFunction: ")	
 	// println("\nFunction: ")	
 	// println("\nFunction: ")	
