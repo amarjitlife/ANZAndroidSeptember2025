@@ -247,6 +247,9 @@ fun <T> calculatorAgain( x: T, y: T, operation: ( T, T ) -> T ) : T {
 fun concat( x: String, y: String ) : String = x + y
 fun concat2( x: String, y: String ) : String = x +  " ### " + y
 
+// class Human(val id: Int, val name: String)
+// fun combine( x: Human, y: Human) : Human = x.id +  " ### " + y.id
+
 fun playWithCalculator() {
     val x = 30
     val y = 20
@@ -267,6 +270,359 @@ fun playWithCalculator() {
 }
 
 //_____________________________________________________________
+
+// Parameterise Types
+// can declare type parameters on methods of classes 
+//      top-level functions, 
+//      and extension functions. 
+//      interfaces, 
+
+//_____________________________________________________________
+
+/*
+interface List<T> {
+    operator fun get( index: Int ) : T
+    //....
+}
+
+class StringList : List<String> {
+     override fun get(index: Int) : String {}
+}
+
+class ArrayList<T> : List<T> {
+     override fun get(index: Int) : T {}
+}
+*/
+
+//_____________________________________________________________
+
+class Temperature( var tempInCelsius: Float ) {
+    override fun toString() = "Temperature(tempInCelsius=$tempInCelsius)"
+}
+
+// Extention Property
+var Temperature.tempInFahrenheit: Float
+    get() = ( tempInCelsius * 9 / 5) + 32
+    set( value ) {
+        tempInCelsius = (value -32) * 5 /9 
+    }
+
+fun playWithExtensionProperties() {
+    val temp = Temperature( 32.0F )
+    println( temp )
+    println( temp.tempInFahrenheit )
+}
+
+//_____________________________________________________________
+
+// Generic Extension Property
+
+val <T> List<T>.penultimate: T
+    get() = this[ size - 2 ]
+
+fun playWithGenericExtensionProperty() {
+    println( listOf( 10, 20, 30, 40 ).penultimate )
+}
+
+// You can’t declare a generic non-extension property
+//      Regular (non-extension) properties can’t have type parameters. 
+//      It’s not possible to store multiple values of different types 
+//      in a property of a class, and therefore declaring a generic 
+//      non-extension property doesn’t make sense
+
+// val <T> someX: T
+
+// KotlinGenerics.kt:327:1: error: property must be initialized.
+// val <T> someX: T
+// ^^^^^^^^^^^^^^^^
+// KotlinGenerics.kt:327:6: error: type parameter of a property must be used in its receiver type.
+// val <T> someX: T
+
+
+//_____________________________________________________________
+
+// Type parameter constraints let you restrict the types that can be 
+// used as type arguments for a class or function
+
+// A type as an upper bound constraint for a type parameter of a
+// generic type, the corresponding type arguments in specific 
+//  instantiations of the generic type must be 
+//      either the specified type or its subtypes
+
+// fun <T> oneHalf( value: T ) : Double {
+fun <T : Number> oneHalf( value: T ) : Double {
+    return value.toDouble()
+}
+
+// error: unresolved reference. None of the following candidates is applicable 
+//      because of a receiver type mismatch:
+// fun String.toDouble(): Double
+//     return value.toDouble()
+
+fun playWithTypeBounds() {
+    println( oneHalf( 3 ) )
+
+    // println( oneHalf( "Ding" ) )
+// KotlinGenerics.kt:350:14: error: cannot infer type for this parameter. Specify it explicitly.
+//     println( oneHalf( "Ding" ) )
+//              ^^^^^^^
+// KotlinGenerics.kt:350:23: error: argument type mismatch: actual type is 'String', 
+//      but 'Number' was expected.
+//     println( oneHalf( "Ding" ) )
+}
+
+/*
+class Human { }
+class Employee : Human { }
+class Manager: Empolyee { }
+
+// Manager Type --> Type Of --> Employee --> Type Of --> Human
+
+val man = Manager()
+val man1: Empolyee = man
+val man2: Manager = man
+
+fun dance( h: Human )   { }
+fun dance( m: Manager ) { }
+
+fun <T : Human> dance( h: T )   { }
+*/
+
+//_____________________________________________________________
+
+// fun <T> max( first: T, second: T) : T {
+fun < T : Comparable<T> > max( first: T, second: T) : T {
+    return if ( first > second ) first else second
+
+// error: unresolved reference. None of the following candidates 
+//      is applicable because of a receiver type mismatch:
+}
+
+fun playWithMax() {
+    println( max( 900, 11 ))
+    println( max( "Ding", "Dong" ))
+}
+
+//_____________________________________________________________
+
+// The type used as a type argument must implement both
+// the CharSequence and Appendable interfaces. This means both the operations
+// accessing the data (endsWith) as well as the operation modifying it (append) can be
+// used with values of that type.
+
+fun <T> ensureTrailingPeriod( sequence: T ) where T : CharSequence, T: Appendable {
+    if ( !sequence.endsWith('.') ) {
+        sequence.append('.')
+    }
+}
+
+fun playWithEnsureTrailingPeriod() {
+    val hello = StringBuilder( "Hello World")
+    ensureTrailingPeriod( hello )
+    println( hello )
+}
+
+
+//_____________________________________________________________
+// DESIGN PRACTICES
+//      Design Towards Nonnullability Rather Than Nullabiliy
+//      Nullability Bring To Only On Design Choice
+
+// In Kotlin
+//      By Default All Types Are NonNullable
+//      Hence You Cannot Store null Value
+
+// In Java/C++
+//      By Default All Types Are Nullable
+//      Hence You Can Store null Value
+
+fun playWithNullability() {
+    var something: String = "Hello"
+    println( something )
+    // something = null
+    println( something )
+
+    // if( something != null ) something.uppercase()
+
+    var something1: String? = "Hello"
+    println( something1 )
+    something1 = null
+    println( something1 )    
+}
+
+//_____________________________________________________________
+
+// If you declare a generic class or function, any type arguments, 
+//  including nullable ones, can be substituted for its type parameters. 
+//  In effect, a type parameter with no upper bound specified will 
+//  have the upper bound of Any?.
+
+class Processor<T> {
+    fun process( value: T ) {
+        value?.hashCode()
+    }
+}
+
+// If you don’t have any restrictions other than nullability, 
+// you can use Any as the upper bound, replacing the
+// default Any?:
+
+// can make a type parameter non-null by specifying any non-null type
+// as an upper bound, not only the type Any.
+
+// NonNullable Generics
+class ProcessorAgain< T : Any > {
+    fun process( value: T ) {
+        value.hashCode()
+    }
+}
+
+fun playWithProcessor() {
+    val nullableStringProcessor = Processor<String?>()
+    nullableStringProcessor.process( null )
+}
+
+
+//_____________________________________________________________
+
+// Variance: generics and subtyping
+// The concept of variance describes how types with the same base type 
+//      and different type arguments relate to each other:
+
+// String       --> Type Of   --> Any
+// List<String> --> ???       --> List<Any>
+
+// Understanding variance is essential when you write your own
+// generic classes or functions: 
+
+// it helps you create APIs that don’t restrict users in inconvenient ways and 
+//      don’t break their type-safety expectations.
+
+//_____________________________________________________________
+
+// a function that takes a List<Any> as an argument. 
+
+// Is it safe to pass a variable of type List<String> to this function? 
+
+// It’s definitely safe to pass a string to a function expecting Any, 
+// because the String class extends Any. 
+// But when Any and String become type arguments of the List interface, it’s not so clear any more.
+
+fun printContent( list: List<Any> ) {
+    println( list.joinToString() )
+}
+
+fun addNames( list: MutableList< out Any> ) {
+    // list.add( 999 )
+}
+
+fun playWithList() {
+    val names: List<String> = listOf("Alice", "Bob", "Martin", "Ketana")
+    printContent( names )
+
+    val namesAgain: MutableList<String> = mutableListOf("Alice", "Bob", "Martin", "Ketana")
+    // addNames( namesAgain )
+
+    // MutableList<Any> and MutableList<String> Are Invariant Types
+    // KotlinGenerics.kt:525:15: error: argument type mismatch: actual type is 'MutableList<String>', 
+    //      but 'MutableList<Any>' was expected.
+}
+
+// that it’s not safe to pass a MutableList<String> as an argument when a
+// MutableList<Any> is expected; the Kotlin compiler correctly forbids that
+
+// In Kotlin
+// The List interface in Kotlin represents a read-only collection. 
+
+//  If A is a subtype of B, 
+//  then List<A> is a subtype of List<B>. 
+//  Such classes or interfaces are called covariant.
+
+//_____________________________________________________________
+
+open class Animal {
+    fun feed() {    }
+}
+
+class Cat : Animal() {
+    fun cleanLitter() { }
+}
+
+class Herd< out T : Animal > {
+    val animals = listOf(Animal(), Animal())
+    val size: Int 
+        get() { return 1 }
+
+    // operator fun get( i: Int ) : T {  
+    //     return animals[i]
+    // }
+}
+
+fun feedAll( animals: Herd<Animal> ) {
+    for ( i in 0 until animals.size ) {
+        // animals[i].feed() // animals.get( i ).feed()
+    }
+}
+
+fun takeCareCats( cats: Herd<Cat> ) {
+    for ( i in 0 until cats.size ) {
+        // cats[i].cleanLitter()
+        feedAll(cats)
+
+// KotlinGenerics.kt:570:17: error: argument type mismatch: actual type is 'Herd<Cat>', but 'Herd<Animal>' was expected.
+//         feedAll(cats)
+    }
+}
+
+// To reiterate, the out keyword on the type parameter T means two things
+    //  - The subtyping is preserved (Producer<Cat> is a subtype of Producer<Animal>)
+    //  - T can be used only in out positions.
+
+// You can’t make any class covariant: it would be unsafe. 
+
+// Making the class covariant on a certain type parameter constrains 
+// the possible uses of this type parameter in the class.
+// To guarantee type safety, it can be used only in so-called out positions, 
+// meaning the class can produce values of type T but not consume them.
+
+// Uses of a type parameter in declarations of class members can be divided 
+//  into in and out positions. 
+
+//  Let’s consider a class that declares a type parameter T and contains
+// a function that uses T. We say that if T is used as the return type of a function, it’s in the
+// out position. In this case, the function produces values of type T. If T is used as the type
+// of a function parameter, it’s in the in posi-
+// tion. Such a function consumes values of type T.
+
+//_____________________________________________________________
+
+// interface List<out T> : Collection<T> {
+//     operator fun get(index: Int): T
+//     // ...
+// }
+
+// interface MutableList<T> : List<T>, MutableCollection<T> {
+//     override fun add(element: T): Boolean
+// }
+
+//_____________________________________________________________
+
+// String ---> Type Of ---> Any
+// Comparator<Any> ---> Type Of ---> Comparator<String>
+
+//_____________________________________________________________
+
+// Cat --> Sub Type Of --> Animal
+// Producer<Cat> --> Sub Type Of --> Producer<Animal>
+// Consumer<Animal> --> Sub Type Of --> Consumer<Cat>
+
+// In Convariant
+//      T Only In out Position
+
+// In Contravariant
+//      T Only In in Position
+
+//_____________________________________________________________
 //_____________________________________________________________
 //_____________________________________________________________
 //_____________________________________________________________
@@ -284,10 +640,27 @@ fun main() {
     println("\nFunction: playWithCalculator")
     playWithCalculator()
 
-    // println("\nFunction: ")  
-    // println("\nFunction: ")  
-    // println("\nFunction: ")  
-    // println("\nFunction: ")  
+    println("\nFunction: playWithGenericExtensionProperty")
+    playWithGenericExtensionProperty()
+
+    println("\nFunction: playWithExtensionProperties")
+    playWithExtensionProperties()
+
+    println("\nFunction: playWithTypeBounds")  
+    playWithTypeBounds()
+
+    println("\nFunction: playWithMax")  
+    playWithMax()
+
+    println("\nFunction: playWithEnsureTrailingPeriod")
+    playWithEnsureTrailingPeriod()
+
+    println("\nFunction: playWithProcessor")  
+    playWithProcessor()
+
+    println("\nFunction: playWithList")
+    playWithList()
+
     // println("\nFunction: ")  
     // println("\nFunction: ")  
     // println("\nFunction: ")  
