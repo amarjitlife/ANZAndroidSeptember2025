@@ -11,6 +11,13 @@ package learnKotlin
 
 //_____________________________________________________________
 
+// Collection Is Type
+//      Type Has Parameter <T>
+//      Paramerized Type
+//      Collection Is Paramaterized Type
+
+//_____________________________________________________________
+
 // Code Tempelate
 //      Polymorphic Function
 //          Using Mechanism Of Generics <T>
@@ -77,14 +84,14 @@ fun <String> Collection<String>.joinToStringFinal(
 //_____________________________________________________________
 
 fun playWithJoinToStringFinal() {
-    val numbers: ArrayList<Integer> = listOf( 10, 20, 30, 40, 50 ) // ArrayList<Integer>
+    val numbers: List<Int> = listOf( 10, 20, 30, 40, 50 ) // ArrayList<Integer>
     // <T> Place Holder To Be Sustituted With Integer Type
     println( numbers.joinToStringFinal( " ; ", "( ", " )" ))
     println( numbers.joinToStringFinal() )
     println( numbers.joinToStringFinal( " ; " ))
     println( numbers.joinToStringFinal( " ; ", "( " ))
 
-    val names: ArrayList<String> = listOf( "Alice", "Martin", "Chandan", "Eshwari" ) // ArrayList<String>
+    val names: List<String> = listOf( "Alice", "Martin", "Chandan", "Eshwari" ) // ArrayList<String>
     // <T> Place Holder To Be Sustituted With String Type
     println( names.joinToStringFinal( " ; ", "( ", " )" ))
     println( names.joinToStringFinal() )
@@ -93,6 +100,52 @@ fun playWithJoinToStringFinal() {
 }
 
 //_____________________________________________________________
+
+// Can Write Extension Functions On <T> Placeholder
+//          Argument Is Lambda Expression With Arugment Of T
+fun <T> T.applyThenReturn( lamdbaExprn: (T) -> Unit ) : T {
+    lamdbaExprn( this )
+    return this
+}
+
+//          T Placeholder Act As Reciever Type For Lambda
+//          Argument Is Lambda Expression With Reciever Of T
+fun <T> T.applyThenReturnAgain( lamdbaExprnWithReceiver: T.() -> Unit ) : T {
+    lamdbaExprnWithReceiver( this )
+    return this
+}
+
+fun playWithExtensionFunction() {
+    var name: String
+
+    name = "Good Morning!".applyThenReturn( { some  -> println( some.uppercase() ) } )
+    println( name )
+
+    name = "Good Morning!".applyThenReturn { some  -> println( some.uppercase() ) } // Trailing Lambda Syntax
+    println( name )
+
+    println("\n.....")
+    name = "Good Morning!".applyThenReturn { 
+        some  -> some.uppercase() 
+    } // Trailing Lambda Syntax
+    println( name )
+
+    name = "Good Morning!".applyThenReturn { 
+        it.uppercase() 
+    } // Trailing Lambda Syntax
+    println( name )
+
+    name = "Good Morning!".applyThenReturnAgain { 
+        println( this.uppercase()  )
+    } // Trailing Lambda Syntax
+    println( name )
+
+    name = "Good Morning!".applyThenReturnAgain { 
+        println( uppercase()  )
+    } // Trailing Lambda Syntax
+    println( name )
+}
+
 //_____________________________________________________________
 //_____________________________________________________________
 //_____________________________________________________________
@@ -101,7 +154,9 @@ fun main() {
     println("\nFunction: playWithJoinToStringFinal")
     playWithJoinToStringFinal()
 
-    // println("\nFunction: ")  
+    println("\nFunction: playWithExtensionFunction")
+    playWithExtensionFunction()
+
     // println("\nFunction: ")  
     // println("\nFunction: ")  
     // println("\nFunction: ")  
