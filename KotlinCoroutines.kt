@@ -773,6 +773,8 @@ fun main() = runBlocking { // MC: Consumer
 //______________________________________________________________________________________
 
 import kotlinx.coroutines.channels.*
+import java.lang.AssertionError
+
 /*
 fun CoroutineScope.produceSquared() : ReceiveChannel<Int> = produce {
     for ( x in 1..10 ) send( x * x )
@@ -856,11 +858,12 @@ fun main() = runBlocking {
 */
 
 //______________________________________________________________________________________
-
-fun main() = runBlocking<Unit> {
+/*
+fun main() = runBlocking {
+    // Buffered Channel; Channel With Fixed Capacity
     val channel = Channel<Int>( 4 ) // Buffered Channel
 
-    var sender = launch {
+    val sender = launch {
         repeat( 10 ) {
             println("Sending: $it")
             channel.send( it )
@@ -870,10 +873,42 @@ fun main() = runBlocking<Unit> {
     delay( 5000 )
     for ( y in channel ) println( channel.receive() )
     println("Consume Done!")
-//    sender.cancel()
+    sender.cancel()
+}
+*/
+//______________________________________________________________________________________
+
+fun main() = runBlocking {
+    val supervisor = SupervisorJob()
+
+    with( CoroutineScope(coroutineContext + supervisor )) {
+        val firstChild = launch( CoroutineExceptionHandler { _, _ -> } ) {
+            println("First Child Failing...")
+            throw AssertionError("First Child Cancelled...")
+        }
+
+        val secondChild = launch {
+            firstChild.join()
+
+            println("First Child Chancel Status: ${firstChild.isCancelled}")
+            try {
+                delay( Long.MAX_VALUE )
+            } finally {
+                println("Second Child Cancelled Because Supervisor Cancelled...")
+            }
+        }
+        println("Second Child Chancel Status: ${secondChild.isCancelled}")
+        firstChild.join()
+        supervisor.cancel()
+        secondChild.join()
+    }
 }
 
-//______________________________________________________________________________________
+//Second Child Chancel Status: false
+//First Child Failing...
+//First Child Chancel Status: true
+//Second Child Cancelled Because Supervisor Cancelled...
+
 //______________________________________________________________________________________
 //______________________________________________________________________________________
 //______________________________________________________________________________________
